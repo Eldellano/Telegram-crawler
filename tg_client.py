@@ -1,8 +1,11 @@
 import asyncio
 import os
+import base64
 
 from aiotdlib import Client
 from dotenv import load_dotenv
+
+from db_works import DataBase, save_result
 
 load_dotenv()
 
@@ -55,8 +58,6 @@ async def get_messages(channel_name: str):
         last_message_id = chat.last_message.id
         last_message_item = chat.last_message
 
-        cnt_messages = 0
-
         all_messages = list()
         all_messages.append(last_message_item)
 
@@ -72,17 +73,48 @@ async def get_messages(channel_name: str):
 
                     all_messages.append(message_in_chat)
                     last_message_id = message_in_chat.id
-                    cnt_messages += 1
+
+
             else:
                 break
 
-        print(f'{cnt_messages=}')
         print(f'{len(all_messages)=}')
-        print(f'{all_messages=}')
+        # print(f'{all_messages=}')
+
+        return all_messages
+
+
+async def rotate():
+    db = DataBase()
+
+    count_row = db.count_channels()
+    if count_row == 0:
+        print('Нет телеграм каналов для обработки')
+
+    for item in range(count_row):
+        channel_data = db.get_one_channel()
+        print(f'{channel_data=}')
+
+        if channel_data:
+            channel_id = channel_data[0]
+            channel_name = channel_data[1]
+
+            db.set_channel_start(channel_id)
+            if result := await get_messages(channel_name):
+                for message in result:
+                    base64_message = base64.b64encode(str(message).encode()).decode('utf-8')
+                    tag = f'tg_{channel_name}'
+
+                    # сохранение результатов
+                    save_result(base64_message, tag)
+
+                # установка статуса завершения
+                db.set_channel_finish(channel_id)
 
 
 if __name__ == '__main__':
     channel_name = 'mudak'
     # channel_name = 'eldellano_channel_test'
     # asyncio.run(get_channel_info(channel_name))
-    asyncio.run(get_messages(channel_name))
+    # asyncio.run(get_messages(channel_name))
+    asyncio.run(rotate())
