@@ -61,7 +61,7 @@ async def get_messages(channel_name: str):
         last_message_item = chat.last_message
 
         all_messages = list()
-        all_messages.append(last_message_item.dict())
+        all_messages.append(last_message_item)
 
         while True:
             messages_history = await client.api.get_chat_history(chat_id=channel_id, from_message_id=last_message_id,
@@ -71,7 +71,7 @@ async def get_messages(channel_name: str):
 
             if messages := messages_history.messages:
                 for message_in_chat in messages:
-                    all_messages.append(message_in_chat.dict())
+                    all_messages.append(message_in_chat)
                     last_message_id = message_in_chat.id
 
 
@@ -104,14 +104,20 @@ async def rotate():
                 for message in result:
                     print(f'Сохранение сообщений - {channel_name}')
 
-                    json_message = json.dumps(message)
+                    try:
+                        message_text = message.content.text.text
+                    except AttributeError:
+                        message_text = None
 
+                    json_message = json.dumps(message.dict())
                     base64_message = base64.b64encode(json_message.encode()).decode('utf-8')
-                    today = datetime.datetime.today().strftime('%d.%m.%Y')
-                    tag = f'tg_{channel_name}_{today}'
+
+                    # today = datetime.datetime.today().strftime('%d.%m.%Y')
+                    # tag = f'tg_{channel_name}_{today}'
 
                     # сохранение результатов
-                    save_result(base64_message, tag)
+                    source_id = 2
+                    save_result(message_text, base64_message, source_id)
 
                 # установка статуса завершения
                 db.set_channel_finish(channel_id)
