@@ -64,8 +64,8 @@ async def get_messages(channel_name: str):
 
         while True:
             messages_history = await client.api.get_chat_history(chat_id=channel_id, from_message_id=last_message_id,
-                                                                 limit=100, offset=0, request_timeout=60)
-            print(f'{last_message_id=}')
+                                                                 limit=100, offset=0, request_timeout=10)
+            print(f'Получение сообщений - {channel_name} - {last_message_id=}')
             # print(f'{messages_history=}')
 
             if messages := messages_history.messages:
@@ -103,6 +103,8 @@ async def rotate():
             db.set_channel_start(channel_id)
             if result := await get_messages(channel_name):
                 for message in result:
+                    print(f'Сохранение сообщений - {channel_name}')
+
                     base64_message = base64.b64encode(str(message).encode()).decode('utf-8')
 
                     today = datetime.datetime.today().strftime('%d.%m.%Y')
