@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import os
 import base64
 
@@ -103,7 +104,9 @@ async def rotate():
             if result := await get_messages(channel_name):
                 for message in result:
                     base64_message = base64.b64encode(str(message).encode()).decode('utf-8')
-                    tag = f'tg_{channel_name}'
+
+                    today = datetime.datetime.today().strftime('%d.%m.%Y')
+                    tag = f'tg_{channel_name}_{today}'
 
                     # сохранение результатов
                     save_result(base64_message, tag)
