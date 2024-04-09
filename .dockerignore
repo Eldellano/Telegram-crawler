@@ -1,0 +1,10 @@
+__pycache__
+.git
+.idea
+venv
+venv311
+.pytest_cache
+/file_official
+/file_official_gz
+/chromedriver
+/postgres-data
