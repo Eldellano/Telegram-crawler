@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import json
 import os
 import base64
 
@@ -60,7 +61,7 @@ async def get_messages(channel_name: str):
         last_message_item = chat.last_message
 
         all_messages = list()
-        all_messages.append(last_message_item)
+        all_messages.append(last_message_item.dict())
 
         while True:
             messages_history = await client.api.get_chat_history(chat_id=channel_id, from_message_id=last_message_id,
@@ -70,9 +71,7 @@ async def get_messages(channel_name: str):
 
             if messages := messages_history.messages:
                 for message_in_chat in messages:
-                    # print(f'{message_in_chat=}')
-
-                    all_messages.append(message_in_chat)
+                    all_messages.append(message_in_chat.dict())
                     last_message_id = message_in_chat.id
 
 
@@ -105,8 +104,9 @@ async def rotate():
                 for message in result:
                     print(f'Сохранение сообщений - {channel_name}')
 
-                    base64_message = base64.b64encode(str(message).encode()).decode('utf-8')
+                    json_message = json.dumps(message)
 
+                    base64_message = base64.b64encode(json_message.encode()).decode('utf-8')
                     today = datetime.datetime.today().strftime('%d.%m.%Y')
                     tag = f'tg_{channel_name}_{today}'
 
