@@ -63,7 +63,7 @@ class DataBase:
         return result.fetchone()[0]
 
 
-def save_result(message, tags):
+def save_result(text, base64_message, source_id):
     result_postgres_host = os.getenv('RESULT_POSTGRES_HOST')
     result_postgres_port = os.getenv('RESULT_POSTGRES_PORT')
     result_postgres_db = os.getenv('RESULT_POSTGRES_DB')
@@ -82,7 +82,7 @@ def save_result(message, tags):
     # conn.close()
     with conn:
         with conn.cursor() as cursor:
-            cursor.execute('INSERT INTO data (base64_data, tags) VALUES (%s, %s)', (message, tags))
+            cursor.execute('INSERT INTO data_source_post (text, metadata_base64, source_id) VALUES (%s, %s, %s)', (text, base64_message, source_id))
 
 
 if __name__ == '__main__':
