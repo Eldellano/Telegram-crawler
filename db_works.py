@@ -63,33 +63,38 @@ class DataBase:
         return result.fetchone()[0]
 
 
-def save_result(text, base64_message, source_id):
-    result_postgres_host = os.getenv('RESULT_POSTGRES_HOST')
-    result_postgres_port = os.getenv('RESULT_POSTGRES_PORT')
-    result_postgres_db = os.getenv('RESULT_POSTGRES_DB')
-    result_postgres_user = os.getenv('RESULT_POSTGRES_USER')
-    result_postgres_pass = os.getenv('RESULT_POSTGRES_PASS')
+class ResultDataBase:
+    def __init__(self):
+        result_postgres_host = os.getenv('RESULT_POSTGRES_HOST')
+        result_postgres_port = os.getenv('RESULT_POSTGRES_PORT')
+        result_postgres_db = os.getenv('RESULT_POSTGRES_DB')
+        result_postgres_user = os.getenv('RESULT_POSTGRES_USER')
+        result_postgres_pass = os.getenv('RESULT_POSTGRES_PASS')
 
-    conn = psycopg2.connect(host=result_postgres_host,
-                            port=result_postgres_port,
-                            # sslmode='verify-full',
-                            dbname=result_postgres_db,
-                            user=result_postgres_user,
-                            password=result_postgres_pass,
-                            target_session_attrs='read-write'
-                            )
+        self.conn = psycopg2.connect(host=result_postgres_host,
+                                     port=result_postgres_port,
+                                     # sslmode='verify-full',
+                                     dbname=result_postgres_db,
+                                     user=result_postgres_user,
+                                     password=result_postgres_pass,
+                                     target_session_attrs='read-write'
+                                     )
 
-    # conn.close()
-    with conn:
-        with conn.cursor() as cursor:
-            cursor.execute('INSERT INTO data_source_post (text, metadata_base64, source_id) VALUES (%s, %s, %s)', (text, base64_message, source_id))
+    def save_result(self, text, base64_message, source_id):
+        with self.conn:
+            with self.conn.cursor() as cursor:
+                cursor.execute('INSERT INTO data_source_post (text, metadata_base64, source_id) VALUES (%s, %s, %s)',
+                               (text, base64_message, source_id))
 
 
 if __name__ == '__main__':
-    db = DataBase()
+    # db = DataBase()
 
     channel_id = 1
     # print(db.get_one_channel())
     # db.set_channel_start(channel_id)
     # db.set_channel_finish(channel_id)
     # print(db.count_channels())
+
+    result_db = ResultDataBase()
+    result_db.save_result('123', 'test', 2)

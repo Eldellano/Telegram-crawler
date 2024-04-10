@@ -7,7 +7,7 @@ import base64
 from aiotdlib import Client
 from dotenv import load_dotenv
 
-from db_works import DataBase, save_result
+from db_works import DataBase, ResultDataBase
 
 load_dotenv()
 
@@ -86,6 +86,7 @@ async def get_messages(channel_name: str):
 
 async def rotate():
     db = DataBase()
+    result_db = ResultDataBase()
 
     count_row = db.count_channels()
     if count_row == 0:
@@ -117,7 +118,7 @@ async def rotate():
 
                     # сохранение результатов
                     source_id = 2
-                    save_result(message_text, base64_message, source_id)
+                    result_db.save_result(message_text, base64_message, source_id)
 
                 # установка статуса завершения
                 db.set_channel_finish(channel_id)
