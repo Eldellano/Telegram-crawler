@@ -124,13 +124,10 @@ async def rotate():
 
                     # сохранение результатов
                     source_id = 2
-                #     result_db.save_result(message_text, base64_message, source_id)
-                #
-                # # установка статуса завершения
-                # db.set_channel_finish(channel_id)
-            else:
-                # установка статуса завершения
-                db.set_channel_finish(channel_id)
+                    result_db.save_result(message_text, base64_message, source_id)
+
+            # установка статуса завершения
+            db.set_channel_finish(channel_id)
 
 
 if __name__ == '__main__':
