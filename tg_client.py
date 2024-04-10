@@ -4,7 +4,7 @@ import json
 import os
 import base64
 
-from aiotdlib import Client
+from aiotdlib import Client, api
 from dotenv import load_dotenv
 
 from db_works import DataBase, ResultDataBase
@@ -47,47 +47,47 @@ async def get_messages(channel_name: str):
     client = Tg().get_client()
 
     async with client:
-        chat = await client.api.search_public_chat(channel_name)  # получение id и прочей инфы о чате/канале
+        try:
+            chat = await client.api.search_public_chat(channel_name)  # получение id и прочей инфы о чате/канале
 
-        # chat_data = {
-        #     'channel_id': chat.id,
-        #     'title': chat.title,
-        #     'photo': chat.photo,
-        #     'last_message': chat.last_message
-        # }
+            # chat_data = {
+            #     'channel_id': chat.id,
+            #     'title': chat.title,
+            #     'photo': chat.photo,
+            #     'last_message': chat.last_message
+            # }
 
-        channel_id = chat.id
-        last_message_id = chat.last_message.id
-        last_message_item = chat.last_message
+            channel_id = chat.id
+            last_message_id = chat.last_message.id
+            last_message_item = chat.last_message
 
-        all_messages = list()
-        all_messages.append(last_message_item)
+            all_messages = list()
+            all_messages.append(last_message_item)
 
-        while True:
-            print(f'Получение сообщений - {channel_name} - {last_message_id=}')
-            try:
-                messages_history = await client.api.get_chat_history(chat_id=channel_id,
-                                                                     from_message_id=last_message_id,
-                                                                     limit=100, offset=0, request_timeout=60)
-            except asyncio.exceptions.TimeoutError:
-                print(f'get_chat_history - TimeoutError')
-                continue
+            while True:
+                print(f'Получение сообщений - {channel_name} - {last_message_id=}')
+                try:
+                    messages_history = await client.api.get_chat_history(chat_id=channel_id,
+                                                                         from_message_id=last_message_id,
+                                                                         limit=100, offset=0, request_timeout=60)
+                except asyncio.exceptions.TimeoutError:
+                    print(f'get_chat_history - TimeoutError')
+                    continue
 
-            # print(f'{messages_history=}')
-
-            if messages := messages_history.messages:
-                for message_in_chat in messages:
-                    all_messages.append(message_in_chat)
-                    last_message_id = message_in_chat.id
+                if messages := messages_history.messages:
+                    for message_in_chat in messages:
+                        all_messages.append(message_in_chat)
+                        last_message_id = message_in_chat.id
 
 
-            else:
-                break
+                else:
+                    break
 
-        print(f'{len(all_messages)=}')
-        # print(f'{all_messages=}')
+            return all_messages
 
-        return all_messages
+        except api.errors.error.BadRequest as channel_error:
+            print(f'{channel_error.message=}')
+            return None
 
 
 async def rotate():
@@ -124,8 +124,11 @@ async def rotate():
 
                     # сохранение результатов
                     source_id = 2
-                    result_db.save_result(message_text, base64_message, source_id)
-
+                #     result_db.save_result(message_text, base64_message, source_id)
+                #
+                # # установка статуса завершения
+                # db.set_channel_finish(channel_id)
+            else:
                 # установка статуса завершения
                 db.set_channel_finish(channel_id)
 
