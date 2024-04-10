@@ -64,9 +64,15 @@ async def get_messages(channel_name: str):
         all_messages.append(last_message_item)
 
         while True:
-            messages_history = await client.api.get_chat_history(chat_id=channel_id, from_message_id=last_message_id,
-                                                                 limit=100, offset=0, request_timeout=10)
             print(f'Получение сообщений - {channel_name} - {last_message_id=}')
+            try:
+                messages_history = await client.api.get_chat_history(chat_id=channel_id,
+                                                                     from_message_id=last_message_id,
+                                                                     limit=100, offset=0, request_timeout=60)
+            except asyncio.exceptions.TimeoutError:
+                print(f'get_chat_history - TimeoutError')
+                continue
+
             # print(f'{messages_history=}')
 
             if messages := messages_history.messages:
