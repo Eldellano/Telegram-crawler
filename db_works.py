@@ -80,11 +80,15 @@ class ResultDataBase:
                                      target_session_attrs='read-write'
                                      )
 
-    def save_result(self, text, base64_message, source_id):
+    def save_result_post(self, text, base64_message, source_id):
         with self.conn:
             with self.conn.cursor() as cursor:
-                cursor.execute('INSERT INTO data_source_post (text, metadata_base64, source_id) VALUES (%s, %s, %s)',
-                               (text, base64_message, source_id))
+                cursor.execute(
+                    'INSERT INTO data_source_post (text, metadata_base64, source_id) VALUES (%s, %s, %s) RETURNING id',
+                    (text, base64_message, source_id))
+
+                row_id = cursor.fetchone()[0]
+                return row_id
 
 
 if __name__ == '__main__':
@@ -97,4 +101,4 @@ if __name__ == '__main__':
     # print(db.count_channels())
 
     result_db = ResultDataBase()
-    result_db.save_result('123', 'test', 2)
+    result_db.save_result_post('123', 'test', 2)
