@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import json
 import os
 import base64
@@ -41,21 +40,34 @@ async def get_channel_info(channel_name: str) -> dict:
         return chat_data
 
 
+def save_messages(channel_name, messages: list):
+    """Ротация по полученным сообщениям и их сохранение"""
+    result_db = ResultDataBase()
+
+    for message in messages:
+        print(f'Сохранение сообщений - {channel_name}')
+
+        try:
+            message_text = message.content.text.text
+        except AttributeError:
+            message_text = None
+
+        json_message = json.dumps(message.dict())
+        base64_message = base64.b64encode(json_message.encode()).decode('utf-8')
+
+        # сохранение результатов
+        source_id = 2
+        saved_message_id = result_db.save_result_post(message_text, base64_message, source_id)
+
+
 async def get_messages(channel_name: str):
-    """Получение сообщений из канала/группы"""
+    """Получение и сохранение сообщений из канала/группы"""
 
     client = Tg().get_client()
 
     async with client:
         try:
             chat = await client.api.search_public_chat(channel_name)  # получение id и прочей инфы о чате/канале
-
-            # chat_data = {
-            #     'channel_id': chat.id,
-            #     'title': chat.title,
-            #     'photo': chat.photo,
-            #     'last_message': chat.last_message
-            # }
 
             channel_id = chat.id
             last_message_id = chat.last_message.id
@@ -79,20 +91,22 @@ async def get_messages(channel_name: str):
                         all_messages.append(message_in_chat)
                         last_message_id = message_in_chat.id
 
+                    if all_messages:
+                        save_messages(channel_name, all_messages)
+                        all_messages.clear()
 
                 else:
                     break
 
-            return all_messages
+            return True
 
         except api.errors.error.BadRequest as channel_error:
             print(f'{channel_error.message=}')
-            return None
+            return False
 
 
 async def rotate():
     db = DataBase()
-    result_db = ResultDataBase()
 
     count_row = db.count_channels()
     if count_row == 0:
@@ -106,33 +120,18 @@ async def rotate():
             channel_id = channel_data[0]
             channel_name = channel_data[1]
 
+            # установка статуса начала
             db.set_channel_start(channel_id)
-            if result := await get_messages(channel_name):
-                for message in result:
-                    print(f'Сохранение сообщений - {channel_name}')
 
-                    try:
-                        message_text = message.content.text.text
-                    except AttributeError:
-                        message_text = None
-
-                    json_message = json.dumps(message.dict())
-                    base64_message = base64.b64encode(json_message.encode()).decode('utf-8')
-
-                    # today = datetime.datetime.today().strftime('%d.%m.%Y')
-                    # tag = f'tg_{channel_name}_{today}'
-
-                    # сохранение результатов
-                    source_id = 2
-                    result_db.save_result(message_text, base64_message, source_id)
+            await get_messages(channel_name)
 
             # установка статуса завершения
             db.set_channel_finish(channel_id)
 
 
 if __name__ == '__main__':
-    channel_name = 'mudak'
+    name = 'mudak'
     # channel_name = 'eldellano_channel_test'
-    # asyncio.run(get_channel_info(channel_name))
-    # asyncio.run(get_messages(channel_name))
+    # asyncio.run(get_channel_info(name))
+    # asyncio.run(get_messages(name))
     asyncio.run(rotate())
