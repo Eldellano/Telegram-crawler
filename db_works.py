@@ -2,6 +2,7 @@ import datetime
 import os
 
 import psycopg2
+from psycopg2.extras import execute_values
 from sqlalchemy import create_engine, select, update, func
 from models import ChannelsForMessages
 
@@ -89,6 +90,13 @@ class ResultDataBase:
 
                 row_id = cursor.fetchone()[0]
                 return row_id
+
+    def save_result_comment(self, comments_list: list):
+        with self.conn:
+            with self.conn.cursor() as cursor:
+                execute_values(cursor,
+                               "INSERT INTO comments (post_id, text, base64_data) VALUES %s",
+                               comments_list)
 
 
 if __name__ == '__main__':
