@@ -125,9 +125,14 @@ async def get_messages(channel_name: str):
                             # print(f'Получение комментариев - {channel_name} - {last_message_id=}')
                             last_comment_id = 0
 
+                            timeout_cnt = 0
                             while True:
                                 print(
                                     f'Получение комментариев - {channel_name} - {message_in_chat.id=} - {last_comment_id=}')
+                                if timeout_cnt >= 10:
+                                    print(f'TIMEOUT break {timeout_cnt=}')
+                                    break
+
                                 try:
                                     comments_history = await client.api.get_message_thread_history(
                                         chat_id=chat.id,
@@ -140,12 +145,15 @@ async def get_messages(channel_name: str):
                                         for reply_comment in comments_history.messages:
                                             all_post_comments.append(reply_comment)
                                             last_comment_id = reply_comment.id
+                                    else:
+                                        break
                                 except api.errors.error.AioTDLibError as comment_error:
                                     if comment_error.message == 'Receive messages in an unexpected chat':
                                         print(f'{len(all_post_comments)=} - {comment_error=}')
                                         break
                                 except asyncio.exceptions.TimeoutError:
                                     print(f'get_chat_history - TimeoutError')
+                                    timeout_cnt += 1
                                     continue
                                 finally:
                                     pass
