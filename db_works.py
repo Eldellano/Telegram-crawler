@@ -81,12 +81,12 @@ class ResultDataBase:
                                      target_session_attrs='read-write'
                                      )
 
-    def save_result_post(self, text, base64_message, source_id):
+    def save_result_post(self, text, base64_message, source_id, tag):
         with self.conn:
             with self.conn.cursor() as cursor:
                 cursor.execute(
-                    'INSERT INTO data_source_post (text, metadata_base64, source_id) VALUES (%s, %s, %s) RETURNING id',
-                    (text, base64_message, source_id))
+                    'INSERT INTO data_source_post (text, metadata_base64, source_id, tag) VALUES (%s, %s, %s, %s) RETURNING id',
+                    (text, base64_message, source_id, tag))
 
                 row_id = cursor.fetchone()[0]
                 return row_id

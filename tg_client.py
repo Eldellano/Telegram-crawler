@@ -49,6 +49,7 @@ def save_messages(channel_name, messages: list):
     for message in messages:
         post = message["post"]
         comments = message["comments"]
+        tag = f'{channel_name}'
 
         try:
             # пост только из текста
@@ -65,7 +66,7 @@ def save_messages(channel_name, messages: list):
 
         # сохранение результатов
         source_id = 2
-        saved_message_id = result_db.save_result_post(message_text, base64_message, source_id)
+        saved_message_id = result_db.save_result_post(message_text, base64_message, source_id, tag)
 
         if comments:
             comments_for_save = list()
